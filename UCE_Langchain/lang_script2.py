@@ -5,6 +5,7 @@ from langchain.llms import OpenAI
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA
+import streamlit as st
 
 #para csv
 os.environ['OPENAI_API_KEY'] = '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'
@@ -13,11 +14,10 @@ default_doc_name = 'doc.csv'
 def process_doc(
         path: str = 'C:\\Users\\Mateo\\Desktop\\tabla_Calif.csv',
         is_local: bool = False,
-        question: str = 'Cuál es la nota de Zachary en Química?'
+        question: str = 'Cuál es la nota mas baja para Historia y a qué estudiante pertenece?'
 ):
     loader = CSVLoader(file_path= path, csv_args={
-        'delimiter': ';',
-        'fieldnames': ['Nombre', 'Inglés', 'Matemática', 'Historia', 'Química', 'Física']
+        'delimiter': ';'
     })
 
     doc = loader.load_and_split()
@@ -30,5 +30,31 @@ def process_doc(
     print( "\n*** LA PREGUNTA ES:"+question, "\n****"+qa.run(question))
 
 
+def client():
+    st.title('Control CSV de LLM con LangChain')
+    uploader = st.file_uploader('Sube tu doc .csv', type='csv')
+
+    if uploader:
+        with open(f'./{default_doc_name}', 'wb') as f:
+            f.write(uploader.getbuffer())
+        st.success('CSV guardado!!')
+
+    question = st.text_input('Cuál es la nota de Zachary en Química?',
+                             placeholder='Genera tu pregunta para el doc .csv', disabled=not uploader)
+
+    if st.button('Envía la pregunta'):
+        if uploader:
+            process_doc(
+                path=default_doc_name,
+                is_local=True,
+                question=question
+            )
+        else:
+            st.info('Cargando el documento .CSV')
+            process_doc()
+
+
+
 if __name__ == '__main__':
    process_doc()
+    #client()
